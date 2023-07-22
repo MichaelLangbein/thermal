@@ -36,7 +36,7 @@ class MaxLlh:
         nrSamples, nrBands = X.shape
 
         llhsPerClass = {}
-        for className, classStats in self.stats:
+        for className, classStats in self.stats.items():
             dist = mult.multivariate_normal(classStats["mean"], classStats["cov"], allow_singular=True)
             llhs = dist.pdf(X)
             llhsPerClass[className] = llhs
@@ -65,5 +65,5 @@ class MaxLlh:
                 nrOff += 1
             else:
                 nrCorrect += 1
-        return nrCorrect, nrOff
+        return nrCorrect / (nrOff + nrCorrect)
 

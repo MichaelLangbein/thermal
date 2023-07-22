@@ -4,7 +4,6 @@ import rasterio.features as riof
 import rasterio.transform as riot
 import rasterio.shutil as rios
 from pyproj.transformer import Transformer
-from pystac_client import Client
 import numpy as np
 
 #%%

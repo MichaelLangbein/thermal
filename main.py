@@ -6,8 +6,8 @@ from dataReaders.reader import loadData
 
 
 #%% configuration
-nrTrainingSamples = 1000
-nrTestingSamples = 100
+nrTrainingSamples = 100
+nrTestingSamples = 30
 
 
 #%% data
@@ -26,10 +26,17 @@ print(mllhScore)
 
 
 #%% Tree classifier
-treeClf = tree.DecisionTreeClassifier()
+treeClf = tree.DecisionTreeClassifier(max_depth=4, min_samples_leaf=3)
 treeClf.fit(bandDataTrain, berClassesTrain)
 treeScore = treeClf.score(bandDataTest, berClassesTest)
 print(treeScore)
+
+#%%
+import matplotlib.pyplot as plt
+figure = plt.figure(figsize=(10, 10))
+ax = plt.axes()
+tree.plot_tree(treeClf, ax=ax, fontsize=8, label='root', filled=True, impurity=False)
+
 
 
 #%% Random forrest classifier

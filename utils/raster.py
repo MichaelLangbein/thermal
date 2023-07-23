@@ -4,6 +4,8 @@ import rasterio.features as riof
 import rasterio.transform as riot
 import rasterio.shutil as rios
 from pyproj.transformer import Transformer
+from utils.vectorAndRaster import _rasterize_geom
+from shapely.geometry import shape, box
 import numpy as np
 
 #%%
@@ -136,10 +138,34 @@ def tifLonLatToPixel(fh, lon, lat):
     return pixel
 
 
-def tifGetBbox(fh, bbox):
-    r0, c0 = tifLonLatToPixel(fh, bbox["lonMin"], bbox["latMax"])
-    r1, c1 = tifLonLatToPixel(fh, bbox["lonMax"], bbox["latMin"])
-    return tifGetPixels(fh, r0, r1, c0, c1)
+def tifGetBboxRough(fh, bbox):
+    rtl, ctl = tifLonLatToPixel(fh, bbox["lonMin"], bbox["latMax"])
+    rtr, ctr = tifLonLatToPixel(fh, bbox["lonMax"], bbox["latMax"])
+    rbr, cbr = tifLonLatToPixel(fh, bbox["lonMax"], bbox["latMin"])
+    rbl, cbl = tifLonLatToPixel(fh, bbox["lonMin"], bbox["latMin"])
+
+    r0 = min(rtl, rtr, rbr, rbl)
+    r1 = max(rtl, rtr, rbr, rbl)
+    c0 = min(ctl, ctr, cbr, cbl)
+    c1 = max(ctl, ctr, cbr, cbl)
+    
+    lonMin, latMax = tifPixelToLonLat(r0, c0)
+    lonMax, latMin = tifPixelToLonLat(r1, c1) 
+    
+    outline = shape({
+        "type": "Polygon",
+        "geometry": [[
+            [lonMin, latMax],
+            [lonMax, latMax],
+            [lonMax, latMin],
+            [lonMin, latMin],
+            [lonMin, latMax]
+        ]]
+    })
+    
+    pixels = tifGetPixels(fh, r0, r1, c0, c1)
+    
+    return pixels, outline
 
 
 def tifGetPixels(fh, r0, r1, c0, c1, channels=None):
@@ -156,6 +182,23 @@ def tifGetPixelSizeDegrees(fh):
     sizeW = (lonMax - lonMin) / width
     sizeH = (latMax - latMin) / height
     return sizeH, sizeW
+
+
+def tifGetPixelOutline(fh, row, col):
+    lonMin, latMax = tifPixelToLonLat(fh, row, col)
+    lonMax, latMin = tifPixelToLonLat(fh, row + 1, col + 1)
+    outline = shape({
+        "type": "Polygon",
+        "coordinates": [[
+            [lonMin, latMax],
+            [lonMax, latMax],
+            [lonMax, latMin],
+            [lonMin, latMin],
+            [lonMin, latMax]
+        ]]
+    })
+    return outline
+
 
 
 # %%

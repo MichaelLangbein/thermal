@@ -57,13 +57,10 @@ class MaxLlh:
 
     def score(self, X, Y):
         nrSamples, nrBands = X.shape
-        Ypred = self.predict(X)
-        nrCorrect = 0
-        nrOff = 0
-        for s in range(nrSamples):
-            if Ypred[s] != Y[s]:
-                nrOff += 1
-            else:
-                nrCorrect += 1
-        return nrCorrect / (nrOff + nrCorrect)
+        Ypred = np.array(self.predict(X))
+        err = Y - Ypred
+        err2 = err * err
+        sse = np.sum(err2)
+        return err2
+
 

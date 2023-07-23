@@ -1,24 +1,25 @@
 import numpy as np
 import json
 import fiona
-from utils.raster import readTif, tifGetBbox
+from utils.raster import readTif, tifLonLatToPixel, tifGetPixelOutline
 from shapely.geometry import shape, box
+import os
 
 
-def loadGeoJson(path):
+def loadGeoJson(path: str):
     fh = fiona.open(path, driver="GeoJSON")
     return fh
 
 
-def getClass(jsn, bbox):
+def getClass(jsn, shp: shape):
     
-    bboxTuple = (bbox["lonMin"], bbox["latMin"], bbox["lonMax"], bbox["latMax"])
-    bboxShape = box(*bboxTuple).buffer(0.01)
-    bboxBuffered = bboxShape.bounds
+    bboxBuffered = shp.bounds
     featuresIntersectingWithBbox = [f for f in jsn.filter(bbox=bboxBuffered)]
 
+    featureIds = []
     data = []
     for feature in featuresIntersectingWithBbox:
+        featureIds.append(feature.id)
         berCount = feature.properties["BER_COUNT"]
 
         if berCount is None or berCount <= 0:
@@ -42,8 +43,8 @@ def getClass(jsn, bbox):
         berCountG  = feature.properties["G"]    if feature.properties["G"]  else 0
 
         featureShape = shape(feature.geometry)
-        intersection = featureShape.intersection(bboxShape)
-        overlapDegree = intersection.area / bboxShape.area
+        intersection = featureShape.intersection(shp)
+        overlapDegree = intersection.area / shp.area
 
         meanBer = 15 * berCountA1 + 14 * berCountA2 + 13 * berCountA3 + 12 * berCountB1 + 11 * berCountB2 + 10 * berCountB3 + 9 * berCountC1 + 8 * berCountC2 + 7 * berCountC3 + 6 * berCountD1 + 5 * berCountD2 + 4 * berCountE1 + 3 * berCountE2 + 2 * berCountF + 1 * berCountG
         meanBer /= berCount
@@ -54,7 +55,7 @@ def getClass(jsn, bbox):
         })
 
     if len(data) <= 0:
-        return -9999
+        return -9999, featureIds
 
     weightSum = 0
     estimate = 0
@@ -64,73 +65,68 @@ def getClass(jsn, bbox):
         estimate += weight * meanBer
         weightSum += weight
     if weightSum <= 0:
-        return -9999
+        return -9999, featureIds
     estimate /= weightSum
 
-    return np.round(estimate)
+    return estimate, featureIds
 
 
-def getBbox(jsn):
-    lonMin, latMin, lonMax, latMax = jsn.bounds
-    return {"lonMin": lonMin, "latMin": latMin, "lonMax": lonMax, "latMax": latMax}
+class Ls8:
+    def __init__(self, bands) -> None:
+        path = "data/ls8/"
+        baseFileName = "LC09_L1TP_206023_20230113_20230314_02_T1_"
+        self.fhs = [readTif(path + baseFileName + band + ".TIF") for band in bands]
+        self.bandData = [fh.read(1) for fh in self.fhs]
+        self.qa = readTif(path + baseFileName + "QA_PIXEL.TIF")
+        self.qaData = self.qa.read(1)
 
 
-def loadLs8(path, fileBaseName, bbox, bands, maskClouds=True):
+    def getRandomData(self, bbox):
+        row, col = self.__getRandomCoordsWithData(bbox)
+        xs = []
+        for band in self.bandData:
+            x = band[row, col]
+            xs.append(x)
+        shape = tifGetPixelOutline(self.qa, row, col)
+        return xs, shape
 
-    fhs = [readTif(path + fileBaseName + band + ".TIF") for band in bands]
-    data = np.array([tifGetBbox(fh, bbox)[0] for fh in fhs])
+    def __getRandomCoordsWithData(self, bbox):
+        hasData = False
+        while not hasData:
+            lon = bbox["lonMin"] + np.random.random() * (bbox["lonMax"] - bbox["lonMin"])
+            lat = bbox["latMin"] + np.random.random() * (bbox["latMax"] - bbox["latMin"])
+            row, col = tifLonLatToPixel(self.qa, lon, lat)
+            qaData = self.qaData[row, col]
+            if qaData == 21824:
+                hasData = True
+        return row, col
 
-    if maskClouds:
-        qa = readTif(path + fileBaseName + "QA_PIXEL.tif")
-        qaData = tifGetBbox(qa, bbox)
-        data = np.where(qaData == 21824, data, -9999)
-
-    return data
-
-
-def calcBbox(bboxGlobal, shapeGlobal, index):
-    nrRows, nrCols = shapeGlobal
-    row, col = index
-    width = bboxGlobal["lonMax"] - bboxGlobal["lonMin"]
-    lonPerCol = width / nrCols
-    height = bboxGlobal["latMax"] - bboxGlobal["latMin"]
-    latPerRow = height / nrRows
-
-    lonMin = bboxGlobal["lonMin"] + col * lonPerCol
-    lonMax = lonMin + lonPerCol
-    latMax = bboxGlobal["latMax"] - row * latPerRow
-    latMin = latMax - latPerRow
     
-    return {"lonMin": lonMin, "latMin": latMin, "lonMax": lonMax, "latMax": latMax}
 
 
 def loadData(nrSamples):
     yRaw = loadGeoJson("data/ber/BERPublicSearch/features.geojson")
-    bbox = getBbox(yRaw)
-    bands = ["B1", "B2", "B3", "B4", "B5", "B6", "B7", "B9", "B10", "B11"]   # not reading B8 - has twice the resolution
-    xRaw = loadLs8("data/ls8/", "LC09_L1TP_206023_20230113_20230314_02_T1_", bbox, bands, maskClouds=True)
-    nrBands, nrRows, nrCols = xRaw.shape
+    lonMin, latMin, lonMax, latMax = box(*yRaw.bounds).buffer(-0.06).bounds  # insetting a little so that we don't hit that many no-data values
+    bbox = {"lonMin": lonMin, "latMin": latMin, "lonMax": lonMax, "latMax": latMax}
 
-    X = np.zeros((nrSamples, nrBands))
+    bands = ["B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11"]
+    ls8 = Ls8(bands)
+
+    X = np.zeros((nrSamples, len(bands)))
     Y = np.zeros((nrSamples,))
 
     s = 0
     while s < nrSamples:
-        if s % 10 == 0:
-            print(f"... {100 * s/nrSamples}%")
-        row = np.random.randint(nrRows)
-        col = np.random.randint(nrCols)
-        x = xRaw[:, row, col]
-        if x[0] == -9999:
-            print("hit clouds")
-            continue
-        xBbox = calcBbox(bbox, (nrRows, nrCols), (row, col))
-        y = getClass(yRaw, xBbox)
+        print(f"... {100 * s/nrSamples}%")
+
+        x, shp = ls8.getRandomData(bbox)
+        y, featureIds = getClass(yRaw, shp)
+        
         if y != -9999:
             X[s, :] = x
             Y[s] = y
             s += 1
         else:
-            print("No data: ", xBbox)
+            print("No data: ", shp)
 
     return X, Y

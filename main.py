@@ -12,11 +12,11 @@ nrTestingSamples = 100
 
 
 #%% data
-# bandData = np.load("bandData.npy")
-# berClasses = np.load("berClasses.npy")
-bandData, berClasses = loadData(nrTrainingSamples + nrTestingSamples)
-np.save("bandData.npy", bandData)
-np.save("berClasses.npy", berClasses)
+bandData = np.load("bandData.npy")
+berClasses = np.load("berClasses.npy")
+# bandData, berClasses = loadData(nrTrainingSamples + nrTestingSamples)
+# np.save("bandData.npy", bandData)
+# np.save("berClasses.npy", berClasses)
 
 #%%
 bandDataTrain = bandData[:nrTrainingSamples]

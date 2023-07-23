@@ -185,16 +185,23 @@ def tifGetPixelSizeDegrees(fh):
 
 
 def tifGetPixelOutline(fh, row, col):
-    lonMin, latMax = tifPixelToLonLat(fh, row, col)
-    lonMax, latMin = tifPixelToLonLat(fh, row + 1, col + 1)
+    """
+        Verified to work in qgis
+    """
+    lonTl, latTl = tifPixelToLonLat(fh, row + 1, col    )
+    lonTr, latTr = tifPixelToLonLat(fh, row + 1, col + 1)
+    lonBr, latBr = tifPixelToLonLat(fh, row,     col + 1)
+    lonBl, latBl = tifPixelToLonLat(fh, row,     col    )
+    w2 = (lonTr - lonTl) / 2
+    h2 = (latTr - latBr) / 2
     outline = shape({
         "type": "Polygon",
         "coordinates": [[
-            [lonMin, latMax],
-            [lonMax, latMax],
-            [lonMax, latMin],
-            [lonMin, latMin],
-            [lonMin, latMax]
+            [lonTl - w2, latTl - h2],
+            [lonTr - w2, latTr - h2],
+            [lonBr - w2, latBr - h2],
+            [lonBl - w2, latBl - h2],
+            [lonTl - w2, latTl - h2]
         ]]
     })
     return outline

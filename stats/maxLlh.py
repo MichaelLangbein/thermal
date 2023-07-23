@@ -61,6 +61,6 @@ class MaxLlh:
         err = Y - Ypred
         err2 = err * err
         sse = np.sum(err2)
-        return err2
+        return sse
 
 

@@ -130,3 +130,36 @@ def loadData(nrSamples):
             print("No data: ", shp)
 
     return X, Y
+
+
+
+def testLs8():
+    yRaw = loadGeoJson("data/ber/BERPublicSearch/features.geojson")
+    lonMin, latMin, lonMax, latMax = box(*yRaw.bounds).buffer(-0.06).bounds  # insetting a little so that we don't hit that many no-data values
+    bbox = {"lonMin": lonMin, "latMin": latMin, "lonMax": lonMax, "latMax": latMax}
+
+    bands = ["B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "B10", "B11"]
+    ls8 = Ls8(bands)
+
+    x, shp = ls8.getRandomData(bbox)
+
+    coll = {
+        "type": "FeatureCollection",
+        "features": [
+            {
+                "type": "Feature",
+                "properties": {
+                    "x": [int(v) for v in x]
+                },
+                "geometry": {
+                    "type": "Polygon",
+                    "coordinates": [
+                        [c for c in shp.exterior.coords]
+                    ]
+                }
+            }
+        ]
+    }
+
+    fh = open("testfile.geojson", "w")
+    json.dump(coll, fh)

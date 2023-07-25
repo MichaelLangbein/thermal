@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vite + TS</title>
+  </head>
+  <body>
+    <!-- <div id="pop" style="width: 400px; height: 300px"></div> -->
+
+    <div id="app"></div>
+
+
+    <div id="popup"></div>
+
+
+    <div id="control">
+
+      <div id="modeSelectMean" class="active controlElement">
+        <div class="modeselect">
+          <p>mean</p>
+        </div>
+      </div>
+      
+      <div id="modeSelectTime" class="inactive controlElement">
+        <div class="modeselect">
+          <p>time</p>
+        </div>
+        <div id="timeControl">
+          <div id="timeControlBack" class="inactive"><button> back </button></div>
+          <div id="timeControlCurrentTime"> time </div>
+          <div id="timeControlForward" class="active"><button> forward </button></div>
+        </div>
+      </div>
+
+      <div id="statisticSelect" class="controlElement">
+        <div class="statisticsSelectItem active" id="statisticTemp">T_in [°C]</div>
+        <div class="statisticsSelectItem inactive" id="statisticTinMinTout">T_in - T_out [°C]</div>
+        <div class="statisticsSelectItem inactive" id="statisticTinMinToutNature">T_in - T_out_nature [°C]</div>
+      </div>
+
+    </div>
+
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

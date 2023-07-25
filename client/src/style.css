@@ -1,0 +1,81 @@
+body {
+  margin: 0;
+}
+
+.bw {
+  filter: grayscale(100%);
+}
+
+#app {
+  width: 100%;
+  height: 100vh;
+}
+
+
+#popup {
+  width: 300px;
+  background-color: rgb(232, 233, 234);
+  border-radius: 0.25rem;
+  border: 1px solid rgb(198, 198, 198);
+  padding: 0.5rem;
+}
+
+
+#control {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  width: 215px;
+  background-color: rgb(232, 233, 234);
+  border-radius: 0.25rem;
+  border: 1px solid rgb(198, 198, 198);
+  padding: 0.5rem;
+}
+
+#control .modeselect {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+#control .active {
+
+}
+
+#control .inactive {
+  color: rgb(198, 198, 198);
+}
+
+
+.contolElement {
+  outline: 1px dotted rgb(198, 198, 198);
+  margin: 1px;
+  padding: 0 0.5rem 0 0.5rem;
+}
+
+#modeSelectMean {
+}
+#modeSelectTime {
+}
+
+#timeControl {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding-bottom: 0.5rem;
+}
+
+#timeControlCurrentTime {
+  margin: 0 0.125rem 0 0.125rem;
+}
+
+#timeControl .inactive button {
+  color:  rgb(198, 198, 198);
+}
+
+#statisticSelect {
+}
+
+.statisticsSelectItem {
+
+}

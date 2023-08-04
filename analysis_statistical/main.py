@@ -1,7 +1,7 @@
 #%% imports
 from sklearn import tree
 from sklearn import ensemble
-from stats.maxLlh import MaxLlh
+from analysis_statistical.maxLlh import MaxLlh
 from dataReaders.reader import loadData
 import numpy as np
 

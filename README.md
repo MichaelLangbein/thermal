@@ -25,6 +25,10 @@ https://www.sciencedirect.com/science/article/abs/pii/S037877881100524X
 The EU also publishes some of their government building stock: https://data.europa.eu/data/datasets/building1?locale=en
 
 
+## US building data
+https://trynthink.github.io/buildingsdatasets/
+
+
 ## Ireland Ber
 - BER from https://ndber.seai.ie/BERResearchTool/ber/search.aspx
     - see also https://gis.seai.ie/ber/
@@ -45,5 +49,7 @@ https://custom-scripts.sentinel-hub.com/landsat-8/land_surface_temperature_mappi
 
 
 ## Energy consumption estimates
-https://www.sciencedirect.com/science/article/abs/pii/S0306261920314616
+- https://www.sciencedirect.com/science/article/abs/pii/S0306261920314616
+- http://cs231n.stanford.edu/reports/2022/pdfs/165.pdf
+- https://www.scopus.com/record/display.uri?origin=recordpage&zone=relatedDocuments&eid=2-s2.0-85139879311&noHighlight=false&relpos=2
 
